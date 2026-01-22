@@ -26,17 +26,17 @@ jobs:
       run: |
         docker buildx build \
           --platform linux/amd64,linux/arm64 \
-          -t shrutikoranne/arm64-selfHosted:latest \
+          -t shrutikoranne/arm64-selfhosted:latest \
           --push .
 
     - name: Stop old container
       run: |
-        docker ps -q --filter name=arm64-selfHosted | xargs -r docker stop
-        docker ps -aq --filter name=arm64-selfHosted | xargs -r docker rm
+        docker ps -q --filter name=arm64-selfhosted | xargs -r docker stop
+        docker ps -aq --filter name=arm64-selfhosted | xargs -r docker rm
 
     - name: Run new container
       run: |
         docker run -d \
-          --name arm64-selfHosted \
+          --name arm64-selfhosted \
           -p 3000:3000 \
-          shrutikoranne/arm64-selfHosted:latest
+          shrutikoranne/arm64-selfhosted:latest

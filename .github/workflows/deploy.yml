@@ -1,0 +1,42 @@
+name: ARM64 Multi-Arch Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted   # <-- EC2 is the runner
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Enable Buildx
+      run: |
+        docker buildx create --use || true
+        docker buildx inspect --bootstrap
+
+    - name: Docker login
+      run: |
+        echo "${{ secrets.DOCKERHUB_TOKEN }}" | \
+        docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    - name: Build & push multi-arch image
+      run: |
+        docker buildx build \
+          --platform linux/amd64,linux/arm64 \
+          -t shrutikoranne/arm64-selfHosted:latest \
+          --push .
+
+    - name: Stop old container
+      run: |
+        docker ps -q --filter name=arm64-selfHosted | xargs -r docker stop
+        docker ps -aq --filter name=arm64-selfHosted | xargs -r docker rm
+
+    - name: Run new container
+      run: |
+        docker run -d \
+          --name arm64-selfHosted \
+          -p 3000:3000 \
+          shrutikoranne/arm64-selfHosted:latest
